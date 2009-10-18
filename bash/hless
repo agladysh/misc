@@ -1,0 +1,4 @@
+#! /bin/sh
+
+highlight -A $@ | less -R
+
