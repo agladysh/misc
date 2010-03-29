@@ -11,7 +11,7 @@ if [ -z "${APP}" -o -z "${ARTWORK}" -o -z "${DEST_IPA}" ]; then
   exit 1
 fi
 
-PAYLOAD_TMP=$(mktemp -d)
+PAYLOAD_TMP=$(mktemp -d -t `basename $0`)
 
 if [ ! -d "${APP}" ]; then
   echo "output .app not found: '${APP}'" >&2
