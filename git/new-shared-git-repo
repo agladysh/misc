@@ -1,0 +1,165 @@
+#! /usr/bin/env lua
+--------------------------------------------------------------------------------
+-- new.lua: create new shared Git repository with mailing list
+--------------------------------------------------------------------------------
+
+local usage = function()
+  io.stderr:write("Usage:\n")
+  io.stderr:write(
+      "  ", arg[0],
+      " <path> <name> <ml> <sender> <prefix> [group] [hook]\n"
+    )
+  io.stderr:write("\n")
+  io.stderr:write("Example:\n")
+  io.stderr:write(
+      "  ", arg[0],
+      " ./my.git MyRepo list@example.com no-reply@example.com MY\n"
+    )
+  io.stderr:write("\n")
+  io.stderr:flush()
+  os.exit(1)
+end
+
+local PATH   = select(1, ...) or usage()
+local NAME   = select(2, ...) or usage()
+local ML     = select(3, ...) or usage()
+local FROM   = select(4, ...) or usage()
+local PREFIX = select(5, ...) or usage()
+local GROUP  = select(6, ...) or "gitusers"
+
+local HOOK   = select(7, ...)
+  or "/usr/share/doc/git-core/contrib/hooks/post-receive-email"
+
+io.stdout:write(
+    "--> About to create new shared Git repository\n",
+    "-->   path:           ", PATH, "\n",
+    "-->   name:           ", NAME, "\n",
+    "-->   mailing list:   ", ML, "\n",
+    "-->   sender:         ", FROM, " (do not forget to subscribe it to ML)\n",
+    "-->   subject prefix: ", NAME, "\n",
+    "-->   post-receive:   ", HOOK, "\n"
+  )
+io.stdout:flush()
+
+if PATH:sub(-4) ~= ".git" then
+  error("path should end with '.git'")
+end
+
+if os.execute("test -e '" .. PATH .. "'") == 0 then
+  error("path " .. PATH .. " already exists")
+end
+
+if os.execute("test -e '" .. HOOK .. "'") ~= 0 then
+  error("post-receive hook " .. HOOK .. " does not exist")
+end
+
+io.stdout:write("--> Creating directory...\n")
+io.stdout:flush()
+if os.execute("mkdir -p '" .. PATH .. "'") ~= 0 then
+  error("failed to create " .. PATH)
+end
+
+assert(xpcall(function()
+  io.stdout:write("--> Setting owner...\n")
+  io.stdout:flush()
+  if os.execute("chown ':" .. GROUP .. "' '" .. PATH .. "'") ~= 0 then
+    error("failed to set owner group '" .. GROUP .. "' for " .. PATH)
+  end
+
+  io.stdout:write("--> Setting permissions...\n")
+  io.stdout:flush()
+  if os.execute("chmod g+ws '" .. PATH .. "'") ~= 0 then
+    error("failed to set permissions for " .. PATH)
+  end
+
+  io.stdout:write("--> Initializing Git repository...\n")
+  io.stdout:flush()
+  if
+    os.execute(
+        "cd '" .. PATH .. "'"
+     .. " && git init --bare --shared"
+     .. " && cd - >/dev/null"
+      ) ~= 0
+  then
+    error("failed to initialize git repository at " .. PATH)
+  end
+
+  local GIT = "git --git-dir='" .. PATH .. "'"
+
+  io.stdout:write("--> Configuring Git repository...\n")
+  io.stdout:flush()
+  if os.execute(GIT .. " config receive.denyNonFastForwards false") ~= 0 then
+    error("git config failed (receive.denyNonFastForwards)")
+  end
+
+  if
+    os.execute(GIT .. " config hooks.envelopesender '" .. FROM .. "'") ~= 0
+  then
+    error("git config failed (hooks.envelopesender)")
+  end
+
+  if
+    os.execute(GIT .. " config hooks.emailprefix '[" .. PREFIX .. "] '") ~= 0
+  then
+    error("git config failed (hooks.emailprefix)")
+  end
+
+  if
+    os.execute(GIT .. " config hooks.mailinglist '" .. ML .. "'") ~= 0
+  then
+    error("git config failed (hooks.mailinglist)")
+  end
+
+  io.stdout:write("--> Writing description file...\n")
+  io.stdout:flush()
+  do
+    local description_filename = PATH .. "/description"
+
+    local description, err = io.open(description_filename, "w")
+    if not description_filename then
+      error(
+          "failed to open '" .. description_filename .. "' for writing:\n"
+       .. err
+        )
+    end
+
+    description:write(NAME, "\n")
+    description:close()
+    description = nil
+  end
+
+  io.stdout:write("--> Removing hook examples...\n")
+  io.stdout:flush()
+  if
+    os.execute("find '" .. PATH .. "/hooks' -name '*.sample' -delete") ~= 0
+  then
+    error("failed to remove hook samples")
+  end
+
+  io.stdout:write("--> Adding post-receive hook...\n")
+  io.stdout:flush()
+  if
+    os.execute(
+        "cp '" .. HOOK .. "' '" .. PATH .. "/hooks/post-receive'"
+      ) ~= 0
+  then
+    error("failed to add post-receive hook")
+  end
+
+  io.stdout:write("--> Making post-receive hook executable...\n")
+  io.stdout:flush()
+  if os.execute("chmod +x '" .. PATH .. "/hooks/post-receive'") ~= 0 then
+    error("failed to make post-receive hook executable")
+  end
+
+  io.stdout:write("--> Done.\n")
+  io.stdout:flush()
+end, function(msg)
+  io.stdout:write("--> Error detected, removing '" .. PATH .. "'\n")
+  io.stdout:flush()
+  if os.execute("rm -r '" .. PATH .. "'") ~= 0 then
+    io.stderr:write("ERROR: Cleanup failed. Remove manually '" .. PATH .. "'\n")
+    io.stderr:flush()
+  end
+  return debug.traceback(msg)
+end))
