@@ -7,12 +7,13 @@ GECOS="${2}"
 USERNAME="${3}"
 GROUP="${4}"
 PUBLICKEY="${5}"
+PASSWORDLOGINSTR="${6}"
 
 function usage
 {
   echo "Usage:" 2>&1
   echo "" 2>&1
-  echo "  ${0} <host> <username> <userlogin> <usergroup> <key.pub>" 2>&1
+  echo "  ${0} <host> <username> <userlogin> <usergroup> <key.pub> [--password-login]" 2>&1
   echo "" 2>&1
   echo "Example:" 2>&1
   echo "  ${0} example.com 'Ivan Ivanov' ivan admin ./ivan_id_rsa.pub" 2>&1
@@ -40,7 +41,16 @@ if [ ! -f "${PUBLICKEY}" ]; then
   usage
 fi
 
-SSH="ssh ${HOST}"
+if [ "${PASSWORDLOGINSTR}" == "--password-login" ]; then
+  SSH="ssh -oPubkeyAuthentication=no ${HOST}"
+else
+  if [ ! -z "${PASSWORDLOGINSTR}" ]; then
+    usage
+  else
+    SSH="ssh ${HOST}"
+  fi
+fi
+
 COMMAND=" \
   adduser \
     --disabled-password \
