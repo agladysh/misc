@@ -1,0 +1,3 @@
+#! /bin/bash
+
+luarocks list | grep -v "^ " | grep -v "^$" | grep -v '^Installed' | grep -v "^-"
