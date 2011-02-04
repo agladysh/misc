@@ -19,6 +19,7 @@ function usage
   echo "  ${0} <host> <username> <userlogin> <usergroup> <key.pub> [--password-login] [--use-sudo]" 2>&1
   echo "" 2>&1
   echo "Example:" 2>&1
+  echo "" 2>&1
   echo "  ${0} example.com 'Ivan Ivanov' ivan admin ./ivan_id_rsa.pub" 2>&1
   echo "" 2>&1
   exit 1
