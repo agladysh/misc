@@ -1,0 +1,15 @@
+#! /bin/bash
+
+if [ -z "${1}" ]; then
+  echo "Usage: ${0} <filename1> [... <filenameN>]" >&2
+  exit 1
+fi
+
+ARGS=()
+
+while [ $# -gt 0 ]; do
+  ARGS[${#ARGS[*]}]="sftp://:@work/$(readlink -f "${1}")"
+  shift
+done
+
+ssh agmac.local edit ${ARGS[@]}
