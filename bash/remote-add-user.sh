@@ -85,7 +85,7 @@ COMMAND=" \
     --gecos \"${GECOS}\" \
     --ingroup=${GROUP} \
     ${USERNAME} \
-  && mkdir ~${USERNAME}/.ssh/ \
+  && mkdir -p ~${USERNAME}/.ssh/ \
   && cat >~${USERNAME}/.ssh/authorized_keys \
   && chmod 700 ~${USERNAME}/.ssh/ \
   && chmod 600 ~${USERNAME}/.ssh/authorized_keys \
