@@ -1,4 +1,4 @@
 #! /bin/sh
 
-highlight -A $@ | less -R
+highlight -O ansi "$@" | less -R
 
