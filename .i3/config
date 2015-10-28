@@ -157,3 +157,5 @@ bar {
 
 exec --no-startup-id feh --bg-fill wallpapers/
 exec --no-startup-id nm-applet
+
+bindsym $mod+ctrl+l exec --no-startup-id i3lock -d -I3 -c000000
