@@ -1,16 +1,16 @@
-#! /bin/bash
+#!/bin/bash
 
-set -e
+set -euo pipefail
 
-HOST="${1}"
-GECOS="${2}"
-USERNAME="${3}"
-GROUP="${4}"
-PUBLICKEY="${5}"
+HOST="${1:-}"
+GECOS="${2:-}"
+USERNAME="${3:-}"
+GROUP="${4:-}"
+PUBLICKEY="${5:-}"
 
 # TODO: Use getopt.
-OPTION_1="${6}"
-OPTION_2="${7}"
+OPTION_1="${6:-}"
+OPTION_2="${7:-}"
 
 function usage
 {
