@@ -26,22 +26,31 @@ function usage
 }
 
 if [ -z "${HOST}" ]; then
+  echo "Missing host" 2>&1
   usage
 fi
 
 if [ -z "${GECOS}" ]; then
+  echo "Missing username" 2>&1
   usage
 fi
 
 if [ -z "${USERNAME}" ]; then
+  echo "Missing userlogin" 2>&1
   usage
 fi
 
 if [ -z "${GROUP}" ]; then
+  echo "Missing usergroup" 2>&1
   usage
 fi
 
 if [ ! -f "${PUBLICKEY}" ]; then
+  if [ -z "${PUBLICKEY}" ]; then
+    echo "Missing key.pub" 2>&1
+  else
+    echo "Missing key.pub file ${PUBLICKEY}" 2>&1
+  fi
   usage
 fi
 
@@ -56,6 +65,7 @@ else
     USE_SUDO=true
   else
     if [ ! -z "${OPTION_1}" ]; then
+      echo "Unknown option ${OPTION_1}" 2>&1
       usage
     fi
   fi
@@ -68,6 +78,7 @@ else
     USE_SUDO=true
   else
     if [ ! -z "${OPTION_2}" ]; then
+      echo "Unknown option ${OPTION_2}" 2>&1
       usage
     fi
   fi
